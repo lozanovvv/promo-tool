@@ -1,0 +1,41 @@
+# Сборка PromoTool.exe (Windows) и PromoTool.dmg (macOS). by lozanovvv_
+name: build
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: pyinstaller --noconfirm --onefile --windowed --name PromoTool --icon assets/icon.ico --add-data "assets;assets" --collect-all imageio_ffmpeg --collect-all customtkinter app.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PromoTool-Windows-exe
+          path: dist/PromoTool.exe
+  macos:
+    strategy:
+      matrix:
+        include:
+          - os: macos-14
+            name: Apple-Silicon
+          - os: macos-13
+            name: Intel
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: bash tools/make_icns.sh
+      - run: pyinstaller --noconfirm --windowed --name PromoTool --icon assets/icon.icns --osx-bundle-identifier ru.lozanovvv.promotool --add-data "assets:assets" --collect-all imageio_ffmpeg --collect-all customtkinter app.py
+      - run: bash tools/make_dmg.sh dist/PromoTool.app PromoTool-${{ matrix.name }}.dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PromoTool-Mac-${{ matrix.name }}-dmg
+          path: PromoTool-${{ matrix.name }}.dmg
