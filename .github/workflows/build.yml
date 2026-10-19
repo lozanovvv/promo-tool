@@ -23,8 +23,6 @@ jobs:
         include:
           - os: macos-14
             name: Apple-Silicon
-          - os: macos-13
-            name: Intel
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
